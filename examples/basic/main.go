@@ -28,14 +28,8 @@ func main() {
 
 	// 例: アプリケーション側の設定構造体を定義
 	type AppConfig struct {
-		Port               string `infisical:"PORT"`
-		DatabaseURL        string `infisical:"DATABASE_URL"`
-		YTDLP_PATH         string `infisical:"YTDLP_PATH"`
-		GALLERYDL_PATH     string `infisical:"GALLERYDL_PATH"`
-		RCLONE_PATH        string `infisical:"RCLONE_PATH"`
-		DOWNLOAD_BASE_DIR  string `infisical:"DOWNLOAD_BASE_DIR"`
-		VIDEO_DOWNLOAD_DIR string `infisical:"VIDEO_DOWNLOAD_DIR"`
-		MANGA_DOWNLOAD_DIR string `infisical:"MANGA_DOWNLOAD_DIR"`
+		PORT               string `infisical:"PORT"`
+		DATABASE_URL        string `infisical:"DATABASE_URL"`
 	}
 
 	// 取得したシークレット（または環境変数）を設定構造体にマッピング
