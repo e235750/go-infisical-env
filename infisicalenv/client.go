@@ -3,6 +3,7 @@ package infisicalenv
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 
 	infisical "github.com/infisical/go-sdk"
@@ -53,7 +54,10 @@ func (c *Client) LoadConfig(ptr any) error {
 		return fmt.Errorf("ptr must be a pointer to a struct")
 	}
 
-	val := rv.Elem()
+	return c.loadRecursive(rv.Elem(), "")
+}
+
+func (c *Client) loadRecursive(val reflect.Value, prefix string) error {
 	typ := val.Type()
 
 	for i := 0; i < typ.NumField(); i++ {
@@ -61,13 +65,39 @@ func (c *Client) LoadConfig(ptr any) error {
 		fieldVal := val.Field(i)
 
 		tag := fieldInfo.Tag.Get("infisical")
+
+		// 構造体の場合は再帰的に処理
+		if fieldVal.Kind() == reflect.Struct {
+			newPrefix := prefix
+			if tag != "" {
+				if newPrefix != "" {
+					newPrefix = newPrefix + "_" + tag
+				} else {
+					newPrefix = tag
+				}
+			}
+			if err := c.loadRecursive(fieldVal, newPrefix); err != nil {
+				return err
+			}
+			continue
+		}
+
 		if tag == "" {
 			continue
 		}
 
-		secretVal := c.secretMap[tag]
+		// 接頭辞がある場合は結合する
+		fullKey := tag
+		if prefix != "" {
+			fullKey = prefix + "_" + tag
+		}
 
-		// 値が存在する場合のみセット（空文字で上書きしないようにする）
+		secretVal, ok := c.secretMap[fullKey]
+		if !ok || secretVal == "" {
+			secretVal = os.Getenv(fullKey)
+		}
+
+		// 値が存在する場合のみセット
 		if secretVal != "" && fieldVal.CanSet() && fieldVal.Kind() == reflect.String {
 			fieldVal.SetString(secretVal)
 		}
